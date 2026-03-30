@@ -3,21 +3,24 @@ import pandas as pd
 
 def process_data(df):
 
-    print("Processing data...")
+    print("Processing Brazil trade data...")
 
-    # garantir tipos
+    # garantir numérico
     df["Value"] = pd.to_numeric(df["Value"], errors="coerce")
 
-    # remover valores inválidos
+    # remover inválidos
     df = df.dropna(subset=["Value", "Country", "trade_type"])
 
-    # 🔥 AGREGAÇÃO POR PAÍS + IMPORT/EXPORT
-    df_country = (
-        df.groupby(["date", "Country", "trade_type"])["Value"]
+    # 🇧🇷 FILTRO BRASIL
+    df = df[df["Country"] == "BR"]
+
+    # 🔥 AGREGAÇÃO (Import vs Export por data)
+    df_brazil = (
+        df.groupby(["date", "trade_type"])["Value"]
         .sum()
         .reset_index()
     )
 
-    print("Processed dataset size:", len(df_country))
+    print("Brazil dataset size:", len(df_brazil))
 
-    return df_country
+    return df_brazil
