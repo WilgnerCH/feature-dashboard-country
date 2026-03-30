@@ -9,7 +9,7 @@ st.set_page_config(layout="wide")
 
 st.title("🇧🇷 Brazil ↔ Canada Trade Dashboard")
 
-# Cache pesado 
+# Cache pesado
 @st.cache_data
 def load_data():
     df_raw = download_data()
