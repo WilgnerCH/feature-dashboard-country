@@ -1,48 +1,43 @@
 import streamlit as st
 import pandas as pd
 
-# Configuração da página
+from src.download_data import download_data
+from src.process_data import process_data
+
 st.set_page_config(layout="wide")
 
 st.title("🇧🇷 Brazil ↔ Canada Trade Dashboard")
 
-# Cache para performance
+# Cache pesado (dados)
 @st.cache_data
 def load_data():
-    df = pd.read_csv("brazil_trade_summary.csv")
-    
-    # Garantir que a data está no formato correto
+    df_raw = download_data()
+    df = process_data(df_raw)
+
+    # garantir formato de data
     df["date"] = pd.to_datetime(df["date"])
-    
+
     return df
 
 df = load_data()
 
-# Ordenar por data
 df = df.sort_values("date")
 
-# Criar pivot com proteção contra valores faltantes
 pivot = (
     df.pivot(index="date", columns="trade_type", values="Value")
     .fillna(0)
 )
 
-# Garantir que colunas sempre existam
 for col in ["Import", "Export"]:
     if col not in pivot.columns:
         pivot[col] = 0
 
-# Ordenar colunas
 pivot = pivot[sorted(pivot.columns)]
 
 st.subheader("📈 Import vs Export Over Time")
-
 st.line_chart(pivot)
 
-# ===============
-# KPIs simples
-# ===============
-
+# KPIs
 col1, col2 = st.columns(2)
 
 total_import = df[df["trade_type"] == "Import"]["Value"].sum()
