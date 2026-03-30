@@ -1,18 +1,25 @@
 import pandas as pd
 
 def download_data():
-    print("Downloading dataset...")
+    print("Streaming dataset...")
 
     url = "https://huggingface.co/datasets/WilgnerCH/canada-trade-data/resolve/main/canada_trade_full.csv.gz"
 
-    df = pd.read_csv(
+    chunks = pd.read_csv(
         url,
         usecols=["date", "Country", "trade_type", "Value"],
         dtype={"Country": "string", "trade_type": "string"},
-        low_memory=False,
-        nrows=500_000  # LIMITADOR
+        chunksize=100_000  # 🔥 lê em partes
     )
 
-    print("Rows loaded:", len(df))
+    df_list = []
+
+    for chunk in chunks:
+        chunk = chunk[chunk["Country"] == "BR"]
+        df_list.append(chunk)
+
+    df = pd.concat(df_list)
+
+    print("Final rows:", len(df))
 
     return df
