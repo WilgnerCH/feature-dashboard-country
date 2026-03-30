@@ -9,7 +9,7 @@ def download_data():
         url,
         usecols=["date", "Country", "trade_type", "Value"],
         dtype={"Country": "string", "trade_type": "string"},
-        chunksize=100_000  # 🔥 lê em partes
+        chunksize=100_000  # lê em partes
     )
 
     df_list = []
