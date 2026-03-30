@@ -62,34 +62,45 @@ with col2:
     st.metric("Total Exports", f"${total_export:,.0f}")
 
 # ======================
-# MoM (ADVANCED BAR CHART)
+# MoM (VERSÃO MELHORADA)
 # ======================
-st.subheader("📊 Month-over-Month Change (Import vs Export)")
+st.subheader("📊 Month-over-Month Change")
 
 df_mom = df.copy()
-
-# ordenar corretamente
 df_mom = df_mom.sort_values(["trade_type", "date"])
 
-# calcular MoM por tipo
+# calcular MoM
 df_mom["MoM"] = df_mom.groupby("trade_type")["Value"].pct_change()
 
-# cor condicional
-df_mom["color"] = df_mom["MoM"].apply(
-    lambda x: "green" if x >= 0 else "red"
-)
+# remover primeiro mês (NaN)
+df_mom = df_mom.dropna(subset=["MoM"])
 
-# gráfico Altair
-chart = alt.Chart(df_mom).mark_bar().encode(
-    x=alt.X("date:T", title="Date"),
-    y=alt.Y("MoM:Q", title="MoM Change (%)"),
-    color=alt.Color("color:N", scale=None),
-    column=alt.Column("trade_type:N", title=None),
+# transformar em porcentagem real (mais legível)
+df_mom["MoM_pct"] = df_mom["MoM"] * 100
+
+# gráfico separado (mais limpo)
+chart = alt.Chart(df_mom).mark_bar(size=25).encode(
+    x=alt.X("yearmonth(date):O", title="Month"),
+    y=alt.Y("MoM_pct:Q", title="Change (%)"),
+    
+    # cor automática (melhor que manual)
+    color=alt.condition(
+        alt.datum.MoM_pct >= 0,
+        alt.value("#00C853"),  # verde bonito
+        alt.value("#D50000")   # vermelho forte
+    ),
+
+    column=alt.Column(
+        "trade_type:N",
+        title=None,
+        spacing=40
+    ),
+
     tooltip=[
-        alt.Tooltip("date:T", title="Date"),
+        alt.Tooltip("yearmonth(date):T", title="Month"),
         alt.Tooltip("trade_type:N", title="Type"),
-        alt.Tooltip("Value:Q", title="Value", format=",.0f"),
-        alt.Tooltip("MoM:Q", title="MoM", format=".2%")
+        alt.Tooltip("Value:Q", format=",.0f"),
+        alt.Tooltip("MoM_pct:Q", format=".2f", title="% Change")
     ]
 ).properties(
     height=350
